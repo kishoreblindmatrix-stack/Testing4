@@ -1,0 +1,60 @@
+Docker File
+
+# Use official nginx image
+FROM nginx:latest
+
+# Remove default nginx files
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy application files to nginx web directory
+COPY . /usr/share/nginx/html/
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx server
+CMD ["nginx", "-g", "daemon off;"]
+
+YAML File
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-project-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-project
+  template:
+    metadata:
+      labels:
+        app: nginx-project
+    spec:
+      containers:
+      - name: nginx-project
+        image: tampoohoonm/nginx-project:latest
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-project-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx-project
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+	
+Directly on Server
+
+docker build -t tampoohoonm/nginx-project:latest .
+docker push tampoohoonm/nginx-project:latest
+kubectl apply -f deployment.yaml
+kubectl get svc
+http://<external-ip>	
